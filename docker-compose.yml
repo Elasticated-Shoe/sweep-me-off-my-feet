@@ -1,0 +1,62 @@
+version: "3"
+networks:
+  sweepsnet:
+
+services:
+  sweep-nest-api:
+    container_name: sweep-nest-api
+    volumes:
+      - ./api:/app
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    networks:
+      - sweepsnet
+    ports:
+      - 3000:3000
+    environment:
+      NODE_ENV: development
+      DATABASE: "DYNAMO"
+      USERNAME: root
+      PASSWORD: example
+      HOST: dynamodb
+      PORT: 8000
+  sweep-client-admin:
+    container_name: sweep-client-admin
+    volumes:
+      - ./client-admin:/app
+    build:
+      context: .
+      dockerfile: ./client-admin/Dockerfile
+    networks:
+      - sweepsnet
+    ports:
+      - 3006:3006
+  sweep-client-sweep:
+    container_name: sweep-client-sweep
+    volumes:
+      - ./client-sweep:/app
+    build:
+      context: .
+      dockerfile: ./client-sweep/Dockerfile
+    networks:
+      - sweepsnet
+    ports:
+      - 3007:3007
+  dynamodb:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    networks:
+      - sweepsnet
+  # mongo:
+  #   image: mongo
+  #   restart: always
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: example
